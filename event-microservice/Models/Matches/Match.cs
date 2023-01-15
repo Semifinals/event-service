@@ -30,6 +30,7 @@ public class Match
   /// </summary>
   public string[] Standings => Scores
     .OrderBy(v => v.Value)
+    .Reverse()
     .Select(v => v.Key)
     .ToArray();
 
@@ -82,7 +83,7 @@ public class Match
   {
     Scores[teamId] = score;
   }
-  
+
   /// <summary>
   /// Finish the match.
   /// </summary>
