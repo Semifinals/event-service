@@ -1,6 +1,6 @@
 ﻿namespace Microservice.Models.Series;
 
-public enum SeriesState
+public enum SetState
 {
   NotStarted,
   InProgress,

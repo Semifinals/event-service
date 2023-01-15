@@ -1,4 +1,5 @@
 ﻿using Microservice.Models.Matches;
+using Microservice.Models.Progressions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +9,7 @@ namespace Microservice.Models.Series;
 /// <summary>
 /// A series of matches where the goal is to win a set number of matches.
 /// </summary>
-public class Series
+public class Set : IProgression
 {
   /// <summary>
   /// The series' ID in the database.
@@ -53,7 +54,7 @@ public class Series
   /// <summary>
   /// The current state of the match.
   /// </summary>
-  public SeriesState State
+  public SetState State
   {
     get
     {
@@ -64,11 +65,11 @@ public class Series
           Matches.Values.ToArray()[0].State == MatchState.NotStarted
         )
       )
-        return SeriesState.NotStarted;
+        return SetState.NotStarted;
       else if (!Scores.Values.Any(s => s >= Goal))
-        return SeriesState.InProgress;
+        return SetState.InProgress;
       else
-        return SeriesState.Completed;
+        return SetState.Completed;
     }
   }
 
@@ -78,7 +79,7 @@ public class Series
   /// <param name="id">The series ID</param>
   /// <param name="goal">The number of matches to win in the series</param>
   /// <param name="teams">The teams participating in the series</param>
-  public Series(string id, int goal, string[] teams)
+  public Set(string id, int goal, string[] teams)
   {
     Id = id;
     Goal = goal;
@@ -92,7 +93,7 @@ public class Series
   /// <param name="id">The series ID</param>
   /// <param name="goal">The number of matches to win in the series</param>
   /// <param name="matches">The matches taking place in the series</param>
-  public Series(string id, int goal, Dictionary<string, Match> matches)
+  public Set(string id, int goal, Dictionary<string, Match> matches)
   {
     Id = id;
     Goal = goal;
@@ -108,11 +109,22 @@ public class Series
   /// <exception cref="InvalidOperationException"></exception>
   public void SetGoal(int goal)
   {
-    if (State is not SeriesState.NotStarted)
+    if (State is not SetState.NotStarted)
       throw new InvalidOperationException(
         "Cannot change the series goal after it has started"
       );
 
     Goal = goal;
   }
+
+  #region progression
+  
+  /// <summary>
+  /// The progression used in composition.
+  /// </summary>
+  private readonly Progression Progression = new();
+
+  public IProgression[] Progressions => Progression.Progressions;
+
+  #endregion
 }
