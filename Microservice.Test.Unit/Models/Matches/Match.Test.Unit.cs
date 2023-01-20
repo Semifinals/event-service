@@ -107,7 +107,7 @@ public class MatchTests
         };
 
     // Act
-    Match match = new(id, scores, true);
+    Match match = new(id, scores, true, true);
 
     // Assert
     Assert.AreEqual(match.Id, id);
@@ -142,6 +142,19 @@ public class MatchTests
     // Assert
     Assert.AreEqual(match.Scores["team1"], 1);
     Assert.AreEqual(match.Scores["team2"], 2);
+  }
+
+  [TestMethod]
+  public void SetDetailedScore_UpdatesStatus()
+  {
+    // Arrange
+    Match match = new("match", new string[] { "team1", "team2" });
+
+    // Act
+    match.SetDetailedScore(false);
+
+    // Assert
+    Assert.AreEqual(false, match.IsDetailedScores);
   }
 
   [TestMethod]

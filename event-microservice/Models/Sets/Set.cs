@@ -3,6 +3,7 @@ using Microservice.Models.Progressions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace Microservice.Models.Series;
 
@@ -28,7 +29,10 @@ public class Set : IProgression
 
   // TODO: Add seeding to handle ties
 
-  // TODO: Add array containing teams that forfeited to overwrite Scores value
+  /// <summary>
+  /// An array containing the teams in the set that have forfeited.
+  /// </summary>
+  public string[] Forfeits;
 
   /// <summary>
   /// A dictionary where the key is the match ID and the value is the match
@@ -43,9 +47,11 @@ public class Set : IProgression
   public Dictionary<string, int> Scores =>
     Teams.ToDictionary(
       teamId => teamId,
-      teamId => Matches.Values
-        .Where(match => match.Standings[0] == teamId)
-        .Count()
+      teamId => Forfeits.Contains(teamId)
+        ? -1
+        : Matches.Values
+          .Where(match => match.Standings[0] == teamId)
+          .Count()
     );
 
   /// <summary>
@@ -66,6 +72,11 @@ public class Set : IProgression
     get
     {
       if (
+        Scores.Values.Any(s => s >= Goal) ||
+        Scores.Values.Where(score => score != -1).Count() <= 1
+      )
+        return SetState.Completed;
+      else if (
         Matches.Count is 0 ||
         (
           Matches.Count is 1 &&
@@ -73,10 +84,8 @@ public class Set : IProgression
         )
       )
         return SetState.NotStarted;
-      else if (!Scores.Values.Any(s => s >= Goal))
-        return SetState.InProgress;
       else
-        return SetState.Completed;
+        return SetState.InProgress;
     }
   }
 
@@ -91,6 +100,7 @@ public class Set : IProgression
     Id = id;
     Goal = goal;
     Teams = teams;
+    Forfeits = Array.Empty<string>();
     Matches = new();
   }
 
@@ -100,11 +110,16 @@ public class Set : IProgression
   /// <param name="id">The series ID</param>
   /// <param name="goal">The number of matches to win in the series</param>
   /// <param name="matches">The matches taking place in the series</param>
-  public Set(string id, int goal, Dictionary<string, Match> matches)
+  public Set(
+    string id,
+    int goal,
+    Dictionary<string, Match> matches,
+    [Optional] string[] forfeits)
   {
     Id = id;
     Goal = goal;
     Teams = matches.Values.SelectMany(match => match.Teams).Distinct().ToArray();
+    Forfeits = forfeits ?? Array.Empty<string>();
     Matches = matches;
   }
 
@@ -122,6 +137,16 @@ public class Set : IProgression
       );
 
     Goal = goal;
+  }
+  
+  /// <summary>
+  /// Mark a team as forfeited.
+  /// </summary>
+  /// <param name="teamId">The team to forfeit</param>
+  public void Forfeit(string teamId)
+  {
+    if (!Forfeits.Contains(teamId))
+      Forfeits = Forfeits.Append(teamId).ToArray();
   }
 
   #region progression

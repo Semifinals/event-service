@@ -22,11 +22,15 @@ public class Match
   /// A dictionary where the key is the team's ID and the value is their
   /// current score. If the score is -1, it indicates the team has forfeited.
   /// </summary>
-  public readonly Dictionary<string, int> Scores;
+  public Dictionary<string, int> Scores;
+
+  /// <summary>
+  /// Flags if the score is simply marking win/loss or if the scores entered
+  /// are accurate.
+  /// </summary>
+  public bool IsDetailedScores;
 
   // TODO: Add seeding to handle ties
-
-  // TODO: Add flag to recognise W/L vs specific scores entered
 
   /// <summary>
   /// An array containing the IDs of the teams in the match in order of their
@@ -62,11 +66,12 @@ public class Match
   /// <param name="id">The match ID</param>
   /// <param name="scores">The current scores of the match</param>
   /// <param name="finished">Whether or not the match has finished</param>
-  public Match(string id, Dictionary<string, int> scores, bool finished = false)
+  public Match(string id, Dictionary<string, int> scores, bool detailedScore = true, bool finished = false)
   {
     Id = id;
     Teams = scores.Keys.ToArray();
     Scores = scores;
+    IsDetailedScores = detailedScore;
     State = finished ? MatchState.Completed : MatchState.InProgress;
   }
 
@@ -86,6 +91,15 @@ public class Match
   public void SetScore(string teamId, int score)
   {
     Scores[teamId] = score;
+  }
+
+  /// <summary>
+  /// Flag the match as using a detailed or basic win/loss to record score.
+  /// </summary>
+  /// <param name="isDetailed">Whether or not the score is detailed</param>
+  public void SetDetailedScore(bool isDetailed)
+  {
+    IsDetailedScores = isDetailed;
   }
 
   /// <summary>

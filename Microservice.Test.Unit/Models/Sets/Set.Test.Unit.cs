@@ -58,6 +58,20 @@ public class SetTests
   }
 
   [TestMethod]
+  public void Scores_Forfeited()
+  {
+    // Arrange
+    Set set = new("set", 3, new[] { "team1", "team2" });
+
+    // Act
+    set.Forfeit("team1");
+
+    // Assert
+    Assert.AreEqual(0, set.Scores["team2"]);
+    Assert.AreEqual(-1, set.Scores["team1"]);
+  }
+
+  [TestMethod]
   public void Standings_IsCorrectOrder_TwoTeams()
   {
     // Arrange
@@ -236,7 +250,7 @@ public class SetTests
   }
 
   [TestMethod]
-  public void State_Completed()
+  public void State_Completed_Normal()
   {
     // Arrange
     Dictionary<string, int> scores1 = new()
@@ -265,10 +279,21 @@ public class SetTests
     Assert.AreEqual(SetState.Completed, state);
   }
 
-  // TODO: Write tests for constructors
+  [TestMethod]
+  public void State_Completed_Forfeited()
+  {
+    // Arrange
+    Set set = new("set", 3, new[] { "team1", "team2" });
+
+    // Act
+    set.Forfeit("team1");
+
+    // Assert
+    Assert.AreEqual(SetState.Completed, set.State);
+  }
 
   [TestMethod]
-  public void Match_CreatesNew()
+  public void Set_CreatesNew()
   {
     // Arrange
     string[] teams = new[] { "team1", "team2" };
@@ -283,7 +308,7 @@ public class SetTests
   }
 
   [TestMethod]
-  public void Match_CreatesExisting()
+  public void Set_CreatesExisting()
   {
     // Arrange
     Match match = new("match", new Dictionary<string, int>()
@@ -307,7 +332,7 @@ public class SetTests
   }
 
   [TestMethod]
-  public void Match_CreatesCompleted()
+  public void Set_CreatesCompleted()
   {
     // Arrange
     Match match1 = new("match1", new Dictionary<string, int>()
@@ -348,5 +373,18 @@ public class SetTests
 
     // Assert
     Assert.AreEqual(5, set.Goal);
+  }
+
+  [TestMethod]
+  public void Forfeit_ForfeitsTeam()
+  {
+    // Arrange
+    Set set = new("set", 3, new[] { "team1", "team2" });
+
+    // Act
+    set.Forfeit("team1");
+
+    // Assert
+    Assert.IsTrue(set.Forfeits.Contains("team1"));
   }
 }
