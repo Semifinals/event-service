@@ -5,86 +5,95 @@ namespace Microservice.Test.Unit;
 [TestClass]
 public class MatchTests
 {
-    [TestMethod]
-    public void Scores_IsCorrectOrder_TwoTeams()
-    {
-        // Arrange
-        Match match = new("match", new string[] { "team1", "team2" });
+  [TestMethod]
+  public void Standings_IsCorrectOrder_TwoTeams()
+  {
+    // Arrange
+    Match match = new("match", new string[] { "team1", "team2" });
 
-        // Act
-        match.SetScore("team1", 2);
-        match.SetScore("team2", 1);
+    // Act
+    match.SetScore("team1", 2);
+    match.SetScore("team2", 1);
 
-        // Assert
-        Assert.AreEqual("team1", match.Standings[0]);
-        Assert.AreEqual("team2", match.Standings[1]);
-    }
+    // Assert
+    Assert.AreEqual("team1", match.Standings[0]);
+    Assert.AreEqual("team2", match.Standings[1]);
+  }
 
-    [TestMethod]
-    public void Scores_IsCorrectOrder_FourTeams()
-    {
-        // Arrange
-        Match match = new(
-            "match",
-            new string[] { "team1", "team2", "team3", "team4" }
-        );
+  [TestMethod]
+  public void Standings_IsCorrectOrder_FourTeams()
+  {
+    // Arrange
+    Match match = new(
+        "match",
+        new string[] { "team1", "team2", "team3", "team4" }
+    );
 
-        // Act
-        match.SetScore("team1", 2);
-        match.SetScore("team2", 1);
-        match.SetScore("team3", 4);
-        match.SetScore("team4", 3);
+    // Act
+    match.SetScore("team1", 2);
+    match.SetScore("team2", 1);
+    match.SetScore("team3", 4);
+    match.SetScore("team4", 3);
 
-        // Assert
-        Assert.AreEqual("team1", match.Standings[2]);
-        Assert.AreEqual("team2", match.Standings[3]);
-        Assert.AreEqual("team3", match.Standings[0]);
-        Assert.AreEqual("team4", match.Standings[1]);
-    }
+    // Assert
+    Assert.AreEqual("team1", match.Standings[2]);
+    Assert.AreEqual("team2", match.Standings[3]);
+    Assert.AreEqual("team3", match.Standings[0]);
+    Assert.AreEqual("team4", match.Standings[1]);
+  }
 
-    [TestMethod]
-    [Ignore]
-    public void Scores_IsCorrectOrder_TiedScore()
-    {
-        // TODO: Implement seeding to handle tied games
-    }
+  [TestMethod]
+  [Ignore]
+  public void Standings_IsCorrectOrder_TiedScore()
+  {
+    // Arrange
+    Match match = new("match", new string[] { "team1", "team2" });
 
-    [TestMethod]
-    public void Match_CreatesNew()
-    {
-        // Arrange
-        string id = "id";
-        string[] teams = new[] { "team1", "team2" };
+    // Act
+    match.SetScore("team1", 2);
+    match.SetScore("team2", 2);
 
-        // Act
-        Match match = new(id, teams);
+    // Assert
 
-        // Assert
-        Assert.AreEqual(match.Id, id);
-        Assert.AreEqual(match.Teams, teams);
-        Assert.AreEqual(match.State, MatchState.NotStarted);
-    }
+    // TODO: Implement seeding to handle tied games
+  }
 
-    [TestMethod]
-    public void Match_CreatesExisting()
-    {
-        // Arrange
-        string id = "id";
-        Dictionary<string, int> scores = new()
+  [TestMethod]
+  public void Match_CreatesNew()
+  {
+    // Arrange
+    string id = "id";
+    string[] teams = new[] { "team1", "team2" };
+
+    // Act
+    Match match = new(id, teams);
+
+    // Assert
+    Assert.AreEqual(match.Id, id);
+    Assert.AreEqual(match.Teams, teams);
+    Assert.AreEqual(match.State, MatchState.NotStarted);
+  }
+
+  [TestMethod]
+  public void Match_CreatesExisting()
+  {
+    // Arrange
+    string id = "id";
+    Dictionary<string, int> scores = new()
         {
             { "team1", 1 },
             { "team2", 2 },
         };
-        
-        // Act
-        Match match = new(id, scores);
 
-        // Assert
-        Assert.AreEqual(match.Id, id);
-        Assert.AreEqual(match.Scores["team1"], 1);
-        Assert.AreEqual(match.Scores["team2"], 2);
-        Assert.AreEqual(match.State, MatchState.InProgress);
-    }
+    // Act
+    Match match = new(id, scores);
+
+    // Assert
+    Assert.AreEqual(match.Id, id);
+    Assert.AreEqual(match.Scores["team1"], 1);
+    Assert.AreEqual(match.Scores["team2"], 2);
+    Assert.AreEqual(match.State, MatchState.InProgress);
+  }
 
   [TestMethod]
   public void Match_CreatesFinished()
@@ -108,44 +117,44 @@ public class MatchTests
   }
 
   [TestMethod]
-    public void Start_UpdatesState()
-    {
-        // Arrange
-        Match match = new("match", new string[] { "team1", "team2" });
+  public void Start_UpdatesState()
+  {
+    // Arrange
+    Match match = new("match", new string[] { "team1", "team2" });
 
-        // Act
-        match.Start();
+    // Act
+    match.Start();
 
-        // Assert
-        Assert.AreEqual(match.State, MatchState.InProgress);
-    }
+    // Assert
+    Assert.AreEqual(match.State, MatchState.InProgress);
+  }
 
-    [TestMethod]
-    public void SetScore_UpdatesScores()
-    {
-        // Arrange
-        Match match = new("match", new string[] { "team1", "team2" });
+  [TestMethod]
+  public void SetScore_UpdatesScores()
+  {
+    // Arrange
+    Match match = new("match", new string[] { "team1", "team2" });
 
-        // Act
-        match.SetScore("team1", 1);
-        match.SetScore("team2", 2);
+    // Act
+    match.SetScore("team1", 1);
+    match.SetScore("team2", 2);
 
-        // Assert
-        Assert.AreEqual(match.Scores["team1"], 1);
-        Assert.AreEqual(match.Scores["team2"], 2);
-    }
+    // Assert
+    Assert.AreEqual(match.Scores["team1"], 1);
+    Assert.AreEqual(match.Scores["team2"], 2);
+  }
 
-    [TestMethod]
-    public void Finish_UpdatesState()
-    {
-        // Arrange
-        Match match = new("match", new string[] { "team1", "team2" });
+  [TestMethod]
+  public void Finish_UpdatesState()
+  {
+    // Arrange
+    Match match = new("match", new string[] { "team1", "team2" });
 
-        // Act
-        match.Start();
-        match.Finish();
+    // Act
+    match.Start();
+    match.Finish();
 
-        // Assert
-        Assert.AreEqual(match.State, MatchState.Completed);
-    }
+    // Assert
+    Assert.AreEqual(match.State, MatchState.Completed);
+  }
 }

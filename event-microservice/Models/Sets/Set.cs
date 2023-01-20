@@ -26,6 +26,10 @@ public class Set : IProgression
   /// </summary>
   public string[] Teams;
 
+  // TODO: Add seeding to handle ties
+
+  // TODO: Add array containing teams that forfeited to overwrite Scores value
+
   /// <summary>
   /// A dictionary where the key is the match ID and the value is the match
   /// itself. 
@@ -39,7 +43,9 @@ public class Set : IProgression
   public Dictionary<string, int> Scores =>
     Teams.ToDictionary(
       teamId => teamId,
-      teamId => Matches.Values.Sum(m => m.Scores[teamId])
+      teamId => Matches.Values
+        .Where(match => match.Standings[0] == teamId)
+        .Count()
     );
 
   /// <summary>
@@ -48,6 +54,7 @@ public class Set : IProgression
   /// </summary>
   public string[] Standings => Scores
     .OrderBy(v => v.Value)
+    .Reverse()
     .Select(v => v.Key)
     .ToArray();
 
@@ -97,7 +104,7 @@ public class Set : IProgression
   {
     Id = id;
     Goal = goal;
-    Teams = matches.Values.SelectMany(match => match.Teams).ToArray();
+    Teams = matches.Values.SelectMany(match => match.Teams).Distinct().ToArray();
     Matches = matches;
   }
 
@@ -118,7 +125,7 @@ public class Set : IProgression
   }
 
   #region progression
-  
+
   /// <summary>
   /// The progression used in composition.
   /// </summary>

@@ -24,6 +24,10 @@ public class Match
   /// </summary>
   public readonly Dictionary<string, int> Scores;
 
+  // TODO: Add seeding to handle ties
+
+  // TODO: Add flag to recognise W/L vs specific scores entered
+
   /// <summary>
   /// An array containing the IDs of the teams in the match in order of their
   /// current standing in the match.
