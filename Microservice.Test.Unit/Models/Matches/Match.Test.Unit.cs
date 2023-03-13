@@ -9,7 +9,10 @@ public class MatchTests
   public void Standings_IsCorrectOrder_TwoTeams()
   {
     // Arrange
-    Match match = new("match", new string[] { "team1", "team2" });
+    Match match = new(
+      "match",
+      new string[] { "team1", "team2" },
+      new string[] { "team1", "team2" });
 
     // Act
     match.SetScore("team1", 2);
@@ -26,8 +29,8 @@ public class MatchTests
     // Arrange
     Match match = new(
         "match",
-        new string[] { "team1", "team2", "team3", "team4" }
-    );
+        new string[] { "team1", "team2", "team3", "team4" },
+        new string[] { "team1", "team2", "team3", "team4" });
 
     // Act
     match.SetScore("team1", 2);
@@ -43,19 +46,37 @@ public class MatchTests
   }
 
   [TestMethod]
-  [Ignore]
   public void Standings_IsCorrectOrder_TiedScore()
   {
     // Arrange
-    Match match = new("match", new string[] { "team1", "team2" });
+    Match match = new(
+      "match",
+      new string[] { "team1", "team2" },
+      new string[] { "team1", "team2" });
 
     // Act
     match.SetScore("team1", 2);
     match.SetScore("team2", 2);
 
     // Assert
+    Assert.AreEqual("team1", match.Standings[0]);
+  }
 
-    // TODO: Implement seeding to handle tied games
+  [TestMethod]
+  public void Standings_IsCorrectOrder_TiedScore_AlternateSeeding()
+  {
+    // Arrange
+    Match match = new(
+      "match",
+      new string[] { "team1", "team2" },
+      new string[] { "team2", "team1" });
+
+    // Act
+    match.SetScore("team1", 2);
+    match.SetScore("team2", 2);
+
+    // Assert
+    Assert.AreEqual("team2", match.Standings[0]);
   }
 
   [TestMethod]
@@ -64,9 +85,10 @@ public class MatchTests
     // Arrange
     string id = "id";
     string[] teams = new[] { "team1", "team2" };
+    string[] seeds = new[] { "team1", "team2" };
 
     // Act
-    Match match = new(id, teams);
+    Match match = new(id, teams, seeds);
 
     // Assert
     Assert.AreEqual(match.Id, id);
@@ -84,9 +106,10 @@ public class MatchTests
             { "team1", 1 },
             { "team2", 2 },
         };
+    string[] seeds = new[] { "team1", "team2" };
 
     // Act
-    Match match = new(id, scores);
+    Match match = new(id, scores, seeds);
 
     // Assert
     Assert.AreEqual(match.Id, id);
@@ -105,9 +128,10 @@ public class MatchTests
             { "team1", 1 },
             { "team2", 2 },
         };
+    string[] seeds = new[] { "team1", "team2" };
 
     // Act
-    Match match = new(id, scores, true, true);
+    Match match = new(id, scores, seeds, true, true);
 
     // Assert
     Assert.AreEqual(match.Id, id);
@@ -120,7 +144,10 @@ public class MatchTests
   public void Start_UpdatesState()
   {
     // Arrange
-    Match match = new("match", new string[] { "team1", "team2" });
+    Match match = new(
+      "match",
+      new string[] { "team1", "team2" },
+      new string[] { "team1", "team2" });
 
     // Act
     match.Start();
@@ -133,7 +160,10 @@ public class MatchTests
   public void SetScore_UpdatesScores()
   {
     // Arrange
-    Match match = new("match", new string[] { "team1", "team2" });
+    Match match = new(
+      "match",
+      new string[] { "team1", "team2" },
+      new string[] { "team1", "team2" });
 
     // Act
     match.SetScore("team1", 1);
@@ -148,7 +178,10 @@ public class MatchTests
   public void SetDetailedScore_UpdatesStatus()
   {
     // Arrange
-    Match match = new("match", new string[] { "team1", "team2" });
+    Match match = new(
+      "match",
+      new string[] { "team1", "team2" },
+      new string[] { "team1", "team2" });
 
     // Act
     match.SetDetailedScore(false);
@@ -161,7 +194,10 @@ public class MatchTests
   public void Finish_UpdatesState()
   {
     // Arrange
-    Match match = new("match", new string[] { "team1", "team2" });
+    Match match = new(
+      "match",
+      new string[] { "team1", "team2" },
+      new string[] { "team1", "team2" });
 
     // Act
     match.Start();

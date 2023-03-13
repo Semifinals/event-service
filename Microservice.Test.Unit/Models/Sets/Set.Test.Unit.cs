@@ -10,7 +10,8 @@ public class SetTests
   public void Scores_NoMatches()
   {
     // Arrange
-    Set set = new("set", 3, new[] { "team1", "team2" });
+    string[] seeds = new[] { "team1", "team2" };
+    Set set = new("set", 3, new[] { "team1", "team2" }, seeds);
 
     // Act
     Dictionary<string, int> scores = set.Scores;
@@ -24,6 +25,7 @@ public class SetTests
   public void Scores_MidSet()
   {
     // Arrange
+    string[] seeds = new[] { "team1", "team2" };
     Dictionary<string, int> scores1 = new()
     {
       { "team1", 1 },
@@ -42,12 +44,12 @@ public class SetTests
 
     Dictionary<string, Match> matches = new()
     {
-      { "match1", new("match1", scores1) },
-      { "match2", new("match2", scores2) },
-      { "match3", new("match3", scores3) }
+      { "match1", new("match1", scores1, seeds) },
+      { "match2", new("match2", scores2, seeds) },
+      { "match3", new("match3", scores3, seeds) }
     };
 
-    Set set = new("set", 3, matches);
+    Set set = new("set", 3, matches, seeds);
 
     // Act
     Dictionary<string, int> scores = set.Scores;
@@ -61,7 +63,8 @@ public class SetTests
   public void Scores_Forfeited()
   {
     // Arrange
-    Set set = new("set", 3, new[] { "team1", "team2" });
+    string[] seeds = new[] { "team1", "team2" };
+    Set set = new("set", 3, new[] { "team1", "team2" }, seeds);
 
     // Act
     set.Forfeit("team1");
@@ -75,6 +78,7 @@ public class SetTests
   public void Standings_IsCorrectOrder_TwoTeams()
   {
     // Arrange
+    string[] seeds = new[] { "team1", "team2" };
     Dictionary<string, int> scores = new()
     {
       { "team1", 1 },
@@ -83,11 +87,11 @@ public class SetTests
 
     Dictionary<string, Match> matches = new()
     {
-      { "match1", new("match1", scores) },
-      { "match2", new("match2", scores) }
+      { "match1", new("match1", scores, seeds) },
+      { "match2", new("match2", scores, seeds) }
     };
 
-    Set set = new("set", 3, matches);
+    Set set = new("set", 3, matches, seeds);
 
     // Act
     string[] standings = set.Standings;
@@ -101,6 +105,7 @@ public class SetTests
   public void Standings_IsCorrectOrder_FourTeams()
   {
     // Arrange
+    string[] seeds = new[] { "team1", "team2", "team3", "team4" };
     Dictionary<string, int> scores1 = new()
     {
       { "team1", 1 },
@@ -119,12 +124,12 @@ public class SetTests
 
     Dictionary<string, Match> matches = new()
     {
-      { "match1", new("match1", scores1) },
-      { "match2", new("match2", scores2) },
-      { "match3", new("match3", scores3) }
+      { "match1", new("match1", scores1, seeds) },
+      { "match2", new("match2", scores2, seeds) },
+      { "match3", new("match3", scores3, seeds) }
     };
 
-    Set set = new("set", 3, matches);
+    Set set = new("set", 3, matches, seeds);
 
     // Act
     string[] standings = set.Standings;
@@ -137,10 +142,10 @@ public class SetTests
   }
 
   [TestMethod]
-  [Ignore]
   public void Standings_IsCorrectOrder_TiedScore()
   {
     // Arrange
+    string[] seeds = new[] { "team1", "team2" };
     Dictionary<string, int> scores1 = new()
     {
       { "team1", 1 },
@@ -154,25 +159,58 @@ public class SetTests
 
     Dictionary<string, Match> matches = new()
     {
-      { "match1", new("match1", scores1) },
-      { "match2", new("match2", scores2) }
+      { "match1", new("match1", scores1, seeds, true, true) },
+      { "match2", new("match2", scores2, seeds, true, true) }
     };
 
-    Set set = new("set", 3, matches);
+    Set set = new("set", 3, matches, seeds);
 
     // Act
     string[] standings = set.Standings;
 
     // Assert
+    Assert.AreEqual("team1", standings[0]);
+    Assert.AreEqual("team2", standings[1]);
+  }
 
-    // TODO: Implement seeding to handle tied sets
+  [TestMethod]
+  public void Standings_IsCorrectOrder_TiedScore_AlternateSeeding()
+  {
+    // Arrange
+    string[] seeds = new[] { "team2", "team1" };
+    Dictionary<string, int> scores1 = new()
+    {
+      { "team1", 1 },
+      { "team2", 2 }
+    };
+    Dictionary<string, int> scores2 = new()
+    {
+      { "team1", 2 },
+      { "team2", 1 }
+    };
+
+    Dictionary<string, Match> matches = new()
+    {
+      { "match1", new("match1", scores1, seeds, true, true) },
+      { "match2", new("match2", scores2, seeds, true, true) }
+    };
+
+    Set set = new("set", 3, matches, seeds);
+
+    // Act
+    string[] standings = set.Standings;
+
+    // Assert
+    Assert.AreEqual("team2", standings[0]);
+    Assert.AreEqual("team1", standings[1]);
   }
 
   [TestMethod]
   public void State_NotStarted_NoMatch()
   {
     // Arrange
-    Set set = new("set", 3, new[] { "team1", "team2" });
+    string[] seeds = new[] { "team1", "team2" };
+    Set set = new("set", 3, new[] { "team1", "team2" }, seeds);
 
     // Act
     SetState state = set.State;
@@ -185,12 +223,13 @@ public class SetTests
   public void State_NotStarted_PreMatch()
   {
     // Arrange
+    string[] seeds = new[] { "team1", "team2" };
     Dictionary<string, Match> matches = new()
     {
-      { "match1", new("match1", new[] { "team1", "team2" }) }
+      { "match1", new("match1", new[] { "team1", "team2" }, seeds) }
     };
 
-    Set set = new("set", 3, matches);
+    Set set = new("set", 3, matches, seeds);
 
     // Act
     SetState state = set.State;
@@ -203,6 +242,7 @@ public class SetTests
   public void State_InProgress_FirstMatch()
   {
     // Arrange
+    string[] seeds = new[] { "team1", "team2" };
     Dictionary<string, int> scores = new()
     {
       { "team1", 1 },
@@ -211,10 +251,10 @@ public class SetTests
 
     Dictionary<string, Match> matches = new()
     {
-      { "match1", new("match1", scores) }
+      { "match1", new("match1", scores, seeds) }
     };
 
-    Set set = new("set", 3, matches);
+    Set set = new("set", 3, matches, seeds);
 
     // Act
     SetState state = set.State;
@@ -227,20 +267,21 @@ public class SetTests
   public void State_InProgress_PreSecondMatch()
   {
     // Arrange
+    string[] seeds = new[] { "team1", "team2" };
     Match match1 = new("match1", new Dictionary<string, int>()
     {
       { "team1", 1 },
       { "team2", 2 }
-    });
+    }, seeds);
     match1.Finish();
     
     Dictionary<string, Match> matches = new()
     {
       { "match1", match1 },
-      { "match2", new("match2", new[] { "team1", "team2" }) }
+      { "match2", new("match2", new[] { "team1", "team2" }, seeds) }
     };
 
-    Set set = new("set", 3, matches);
+    Set set = new("set", 3, matches, seeds);
 
     // Act
     SetState state = set.State;
@@ -253,6 +294,7 @@ public class SetTests
   public void State_Completed_Normal()
   {
     // Arrange
+    string[] seeds = new[] { "team1", "team2" };
     Dictionary<string, int> scores1 = new()
     {
       { "team1", 1 },
@@ -266,11 +308,11 @@ public class SetTests
 
     Dictionary<string, Match> matches = new()
     {
-      { "match1", new("match1", scores1) },
-      { "match2", new("match2", scores2) }
+      { "match1", new("match1", scores1, seeds) },
+      { "match2", new("match2", scores2, seeds) }
     };
 
-    Set set = new("set", 2, matches);
+    Set set = new("set", 2, matches, seeds);
 
     // Act
     SetState state = set.State;
@@ -283,7 +325,8 @@ public class SetTests
   public void State_Completed_Forfeited()
   {
     // Arrange
-    Set set = new("set", 3, new[] { "team1", "team2" });
+    string[] seeds = new[] { "team1", "team2" };
+    Set set = new("set", 3, new[] { "team1", "team2" }, seeds);
 
     // Act
     set.Forfeit("team1");
@@ -296,10 +339,11 @@ public class SetTests
   public void Set_CreatesNew()
   {
     // Arrange
+    string[] seeds = new[] { "team1", "team2" };
     string[] teams = new[] { "team1", "team2" };
     
     // Act
-    Set set = new("set", 3, teams);
+    Set set = new("set", 3, teams, seeds);
 
     // Assert
     Assert.AreEqual(SetState.NotStarted, set.State);
@@ -311,11 +355,12 @@ public class SetTests
   public void Set_CreatesExisting()
   {
     // Arrange
+    string[] seeds = new[] { "team1", "team2" };
     Match match = new("match", new Dictionary<string, int>()
     {
       { "team1", 1 },
       { "team2", 2 }
-    });
+    }, seeds);
 
     Dictionary<string, Match> matches = new()
     {
@@ -323,7 +368,7 @@ public class SetTests
     };
 
     // Act
-    Set set = new("set", 3, matches);
+    Set set = new("set", 3, matches, seeds);
 
     // Assert
     Assert.AreEqual(SetState.InProgress, set.State);
@@ -335,17 +380,18 @@ public class SetTests
   public void Set_CreatesCompleted()
   {
     // Arrange
+    string[] seeds = new[] { "team1", "team2" };
     Match match1 = new("match1", new Dictionary<string, int>()
     {
       { "team1", 1 },
       { "team2", 2 }
-    });
+    }, seeds);
 
     Match match2 = new("match2", new Dictionary<string, int>()
     {
       { "team1", 0 },
       { "team2", 3 }
-    });
+    }, seeds);
 
     Dictionary<string, Match> matches = new()
     {
@@ -354,7 +400,7 @@ public class SetTests
     };
 
     // Act
-    Set set = new("set", 2, matches);
+    Set set = new("set", 2, matches, seeds);
 
     // Assert
     Assert.AreEqual(SetState.Completed, set.State);
@@ -366,7 +412,8 @@ public class SetTests
   public void SetGoal_UpdatesGoal()
   {
     // Arrange
-    Set set = new("set", 3, new[] { "team1", "team2" });
+    string[] seeds = new[] { "team1", "team2" };
+    Set set = new("set", 3, new[] { "team1", "team2" }, seeds);
 
     // Act
     set.SetGoal(5);
@@ -379,7 +426,8 @@ public class SetTests
   public void Forfeit_ForfeitsTeam()
   {
     // Arrange
-    Set set = new("set", 3, new[] { "team1", "team2" });
+    string[] seeds = new[] { "team1", "team2" };
+    Set set = new("set", 3, new[] { "team1", "team2" }, seeds);
 
     // Act
     set.Forfeit("team1");

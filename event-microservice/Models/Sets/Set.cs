@@ -28,6 +28,7 @@ public class Set : IProgression
   public string[] Teams;
 
   // TODO: Add seeding to handle ties
+  public string[] Seeds;
 
   /// <summary>
   /// An array containing the teams in the set that have forfeited.
@@ -59,6 +60,12 @@ public class Set : IProgression
   /// current standing in the match.
   /// </summary>
   public string[] Standings => Scores
+    .OrderBy(score =>
+      Seeds
+        .Select((v, i) => new { Value = v, Index = i })
+        .Where(p => p.Value == score.Key)
+        .Select(p => -p.Index)
+        .First())
     .OrderBy(v => v.Value)
     .Reverse()
     .Select(v => v.Key)
@@ -95,11 +102,12 @@ public class Set : IProgression
   /// <param name="id">The series ID</param>
   /// <param name="goal">The number of matches to win in the series</param>
   /// <param name="teams">The teams participating in the series</param>
-  public Set(string id, int goal, string[] teams)
+  public Set(string id, int goal, string[] teams, string[] seeds)
   {
     Id = id;
     Goal = goal;
     Teams = teams;
+    Seeds = seeds;
     Forfeits = Array.Empty<string>();
     Matches = new();
   }
@@ -114,11 +122,13 @@ public class Set : IProgression
     string id,
     int goal,
     Dictionary<string, Match> matches,
+    string[] seeds,
     [Optional] string[] forfeits)
   {
     Id = id;
     Goal = goal;
     Teams = matches.Values.SelectMany(match => match.Teams).Distinct().ToArray();
+    Seeds = seeds;
     Forfeits = forfeits ?? Array.Empty<string>();
     Matches = matches;
   }

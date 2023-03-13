@@ -30,13 +30,22 @@ public class Match
   /// </summary>
   public bool IsDetailedScores;
 
-  // TODO: Add seeding to handle ties
+  /// <summary>
+  /// An array in order of the seeding of the match from highest to lowest.
+  /// </summary>
+  public string[] Seeds;
 
   /// <summary>
   /// An array containing the IDs of the teams in the match in order of their
-  /// current standing in the match.
+  /// seeding and then current standing in the match.
   /// </summary>
   public string[] Standings => Scores
+    .OrderBy(score => 
+      Seeds
+        .Select((v, i) => new { Value = v, Index = i })
+        .Where(p => p.Value == score.Key)
+        .Select(p => -p.Index)
+        .First())
     .OrderBy(v => v.Value)
     .Reverse()
     .Select(v => v.Key)
@@ -52,11 +61,12 @@ public class Match
   /// </summary>
   /// <param name="id">The match ID</param>
   /// <param name="teams">An array of teams that will compete</param>
-  public Match(string id, string[] teams)
+  public Match(string id, string[] teams, string[] seeds)
   {
     Id = id;
     Teams = teams;
     Scores = teams.ToDictionary(teamId => teamId, teamId => 0);
+    Seeds = seeds;
     State = MatchState.NotStarted;
   }
 
@@ -66,11 +76,12 @@ public class Match
   /// <param name="id">The match ID</param>
   /// <param name="scores">The current scores of the match</param>
   /// <param name="finished">Whether or not the match has finished</param>
-  public Match(string id, Dictionary<string, int> scores, bool detailedScore = true, bool finished = false)
+  public Match(string id, Dictionary<string, int> scores, string[] seeds, bool detailedScore = true, bool finished = false)
   {
     Id = id;
     Teams = scores.Keys.ToArray();
     Scores = scores;
+    Seeds = seeds;
     IsDetailedScores = detailedScore;
     State = finished ? MatchState.Completed : MatchState.InProgress;
   }
