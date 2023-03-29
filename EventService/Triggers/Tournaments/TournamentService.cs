@@ -1,4 +1,6 @@
-﻿namespace Semifinals.Services.Event.Triggers.Tournaments;
+﻿using Semifinals.Framework.Testing; // TODO: Replace with Framework ID generator
+
+namespace Semifinals.Services.Event.Triggers.Tournaments;
 
 public class TournamentService : IService
 {
@@ -26,7 +28,7 @@ public class TournamentService : IService
             "/id");
 
         // Upload tournament to database
-        string id = ""; // TODO: Generate unique ID
+        string id = Test.GenerateRandomString(); // TODO: Replace with Framework ID generator
         Tournament tournament = new(id, name, startTime, endTime, creatorId);
         Tournament res = await Cosmos.CreateItemAsync(container, tournament, tournament.Id);
 

@@ -14,7 +14,10 @@ public class TournamentController : Controller<TournamentService>
     public async Task<IActionResult> Post(
         [HttpTrigger(authLevel: AuthorizationLevel.Anonymous, "post", Route = "tournaments")] HttpRequest req)
     {
-        return await Function<TournamentPostDto>.Run(req, true)(async func =>
+        return await Function<TournamentPostDto>.Run(
+            req,
+            true,
+            jwtSecret: Environment.GetEnvironmentVariable("JsonWebTokenSecret")!)(async func =>
         {
             // Get user ID from auth
             string creatorId = func.User!.Subject;

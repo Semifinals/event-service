@@ -3,7 +3,7 @@
 public class TournamentPostDto : Dto, IBodyDto
 {
     [JsonProperty("name")]
-    public string Name { get; set; }
+    public string Name { get; set; } = null!;
 
     [JsonProperty("startTime")]
     [JsonConverter(typeof(EpochConverter))]
@@ -31,10 +31,10 @@ public class TournamentPostDto : Dto, IBodyDto
             .Must((dto, p) => p > dto.StartTime);
     });
 
-    public TournamentPostDto(string name, DateTime startTime, DateTime endTime)
-    {
-        Name = name;
-        StartTime = startTime;
-        EndTime = endTime;
-    }
+    //public TournamentPostDto(string name, DateTime startTime, DateTime endTime)
+    //{
+    //    Name = name;
+    //    StartTime = startTime;
+    //    EndTime = endTime;
+    //}
 }
