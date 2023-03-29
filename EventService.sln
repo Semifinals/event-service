@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventService", "EventServic
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventService.Tests.E2E", "EventService.Tests.E2E\EventService.Tests.E2E.csproj", "{0E368652-9AFF-461A-B411-5A7D976D78EF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventServices.Tests.Unit", "EventServices.Tests.Unit\EventServices.Tests.Unit.csproj", "{2B9BEB3B-6872-4B7F-A853-38C3C47F9F0C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventService.Tests.Unit", "EventService.Tests.Unit\EventService.Tests.Unit.csproj", "{2B9BEB3B-6872-4B7F-A853-38C3C47F9F0C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
