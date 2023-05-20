@@ -1,13 +1,13 @@
-﻿namespace Semifinals.Services.EventService.Triggers.Tournaments;
+﻿namespace Semifinals.Services.EventService.Triggers.Events;
 
 [TestClass]
-public class TournamentPostDtoTests
+public class EventPostDtoTests
 {
     [TestMethod]
     public void Validator_AcceptsValid()
     {
         // Arrange
-        TournamentPostDto dto = new()
+        EventPostDto dto = new()
         {
             Name = "Example Name",
             StartTime = DateTime.Now.AddHours(1),
@@ -25,7 +25,7 @@ public class TournamentPostDtoTests
     public void Validator_FailsNoName()
     {
         // Arrange
-        TournamentPostDto dto = new()
+        EventPostDto dto = new()
         {
             StartTime = DateTime.Now.AddHours(1),
             EndTime = DateTime.Now.AddHours(2)
@@ -42,7 +42,7 @@ public class TournamentPostDtoTests
     public void Validator_FailsShortName()
     {
         // Arrange
-        TournamentPostDto dto = new()
+        EventPostDto dto = new()
         {
             Name = "E",
             StartTime = DateTime.Now.AddHours(1),
@@ -60,7 +60,7 @@ public class TournamentPostDtoTests
     public void Validator_FailsLongName()
     {
         // Arrange
-        TournamentPostDto dto = new()
+        EventPostDto dto = new()
         {
             Name = "1234567890123456789012345678901234567890123456789012345678901234567890",
             StartTime = DateTime.Now.AddHours(1),
@@ -78,7 +78,7 @@ public class TournamentPostDtoTests
     public void Validator_FailsNoStartTime()
     {
         // Arrange
-        TournamentPostDto dto = new()
+        EventPostDto dto = new()
         {
             Name = "Example Name",
             EndTime = DateTime.Now.AddHours(2)
@@ -95,7 +95,7 @@ public class TournamentPostDtoTests
     public void Validator_FailsStartTimeBeforeNow()
     {
         // Arrange
-        TournamentPostDto dto = new()
+        EventPostDto dto = new()
         {
             Name = "Example Name",
             StartTime = DateTime.Now.AddHours(-1),
@@ -113,7 +113,7 @@ public class TournamentPostDtoTests
     public void Validator_FailsNoEndTime()
     {
         // Arrange
-        TournamentPostDto dto = new()
+        EventPostDto dto = new()
         {
             Name = "Example Name",
             StartTime = DateTime.UtcNow.AddHours(1),
@@ -130,7 +130,7 @@ public class TournamentPostDtoTests
     public void Validator_FailsEndTimeBeforeNow()
     {
         // Arrange
-        TournamentPostDto dto = new()
+        EventPostDto dto = new()
         {
             Name = "Example Name",
             StartTime = DateTime.Now.AddHours(-2),
@@ -148,7 +148,7 @@ public class TournamentPostDtoTests
     public void Validator_FailsEndTimeBeforeStartTime()
     {
         // Arrange
-        TournamentPostDto dto = new()
+        EventPostDto dto = new()
         {
             Name = "Example Name",
             StartTime = DateTime.Now.AddHours(2),

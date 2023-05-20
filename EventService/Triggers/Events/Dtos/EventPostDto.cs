@@ -1,6 +1,6 @@
-﻿namespace Semifinals.Services.EventService.Triggers.Tournaments;
+﻿namespace Semifinals.Services.EventService.Triggers.Events;
 
-public class TournamentPostDto : Dto, IBodyDto
+public class EventPostDto : Dto, IBodyDto
 {
     [JsonProperty("name")]
     public string Name { get; set; } = null!;
@@ -14,7 +14,7 @@ public class TournamentPostDto : Dto, IBodyDto
     public DateTime EndTime { get; set; }
 
     [JsonIgnore]
-    public override IDtoValidator Validator { get; } = new DtoValidator<TournamentPostDto>(validator =>
+    public override IDtoValidator Validator { get; } = new DtoValidator<EventPostDto>(validator =>
     {
         validator.RuleFor(dto => dto.Name)
             .NotNull()

@@ -1,6 +1,6 @@
 ﻿using Semifinals.Framework.Testing; // TODO: Replace with Framework ID generator
 
-namespace Semifinals.Services.Event.Triggers.Tournaments;
+namespace Semifinals.Services.EventService.Triggers.Tournaments;
 
 public class TournamentService : IService
 {

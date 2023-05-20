@@ -1,4 +1,4 @@
-﻿namespace Semifinals.Services.Event.Triggers.Tournaments;
+﻿namespace Semifinals.Services.EventService.Triggers.Tournaments;
 
 public class TournamentController : Controller<TournamentService>
 {
@@ -14,26 +14,25 @@ public class TournamentController : Controller<TournamentService>
     public async Task<IActionResult> Post(
         [HttpTrigger(authLevel: AuthorizationLevel.Anonymous, "post", Route = "tournaments")] HttpRequest req)
     {
-        return await Function<TournamentPostDto>.Run(
-            req,
-            true,
-            jwtSecret: Environment.GetEnvironmentVariable("JsonWebTokenSecret")!)(async func =>
-        {
-            // Get user ID from auth
-            string creatorId = func.User!.Subject;
+        return await FunctionBuilder.Init()
+            .AddBody<TournamentPostDto>()
+            .Build(req, true)(async func =>
+            {
+                // Get user ID from auth
+                string creatorId = Token.GetId(func.User!)!;
 
-            // Create tournament
-            Tournament tournament = await Service.CreateTournament(
-                creatorId,
-                func.Body.Name,
-                func.Body.StartTime,
-                func.Body.EndTime);
+                // Create tournament
+                Tournament tournament = await Service.CreateTournament(
+                    creatorId,
+                    func.Body.Name,
+                    func.Body.StartTime,
+                    func.Body.EndTime);
 
-            // Respond with created tournament
-            return new CreatedResult(
-                $"https://api.semifinals.co/tournaments/{tournament.Id}",
-                tournament);
-        });
+                // Respond with created tournament
+                return new CreatedResult(
+                    $"https://api.semifinals.co/tournaments/{tournament.Id}",
+                    tournament);
+            });
     }
 
     /// <summary>
@@ -49,7 +48,7 @@ public class TournamentController : Controller<TournamentService>
         [HttpTrigger(authLevel: AuthorizationLevel.Anonymous, "get", Route = "tournaments/{id}")] HttpRequest req,
         string id)
     {
-        return await Function.Run(req)(async func =>
+        return await FunctionBuilder.Init().Build(req)(async func =>
         {
             // Fetch tournament
             Tournament? tournament = await Service.FindTournament(id);

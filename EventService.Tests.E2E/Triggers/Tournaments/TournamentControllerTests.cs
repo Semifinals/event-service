@@ -1,12 +1,12 @@
 ﻿using Newtonsoft.Json.Linq;
 using System.IO;
 
-namespace Semifinals.Services.Event.Triggers.Tournaments;
+namespace Semifinals.Services.EventService.Triggers.Tournaments;
 
 [TestClass]
 public class TournamentControllerTests : Test
 {
-    private readonly string TestUserJwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2ODAwNzMyOTEzNjgsImV4cCI6MTk5NTY5MjU0NDAwMCwic3ViIjoiVGVzdEFkbWluIiwiZW1haWxBZGRyZXNzIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJpZCI6IlRlc3RBZG1pbiIsImZsYWdzIjoxfQ==.rm1VK6sZTguLwB4ZpFt/3TwKiuV3w2UUFNj79EHKP70=";
+    private readonly string TestToken = "dGVzdA==.ODY0MDA=.iNsbhu5s1rdoPT960fY0Bu7sQAaaP2ysD3RJS9DQUmg=";
 
     [TestInitialize]
     public void TestInitialize()
@@ -20,7 +20,7 @@ public class TournamentControllerTests : Test
             Environment.SetEnvironmentVariable(item.Key, item.Value.ToString());
         }
 
-        Environment.SetEnvironmentVariable("JsonWebTokenSecret", "jwtSecret");
+        Environment.SetEnvironmentVariable("TokenSecret", "secret");
     }
 
     [TestMethod]
@@ -36,7 +36,7 @@ public class TournamentControllerTests : Test
 
         HttpRequest req = await CreateRequest(
             dto,
-            authorizationHeader: $"Bearer {TestUserJwt}");
+            authorizationHeader: $"Bearer {TestToken}");
 
         // Act
         IActionResult res = await new TournamentController().Post(req);
@@ -61,7 +61,7 @@ public class TournamentControllerTests : Test
 
         HttpRequest postReq = await CreateRequest(
             dto,
-            authorizationHeader: $"Bearer {TestUserJwt}");
+            authorizationHeader: $"Bearer {TestToken}");
 
         IActionResult postRes = await new TournamentController().Post(postReq);
         Tournament postResData = (Tournament)((CreatedResult)postRes).Value;

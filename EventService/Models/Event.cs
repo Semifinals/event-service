@@ -1,7 +1,10 @@
 ﻿namespace Semifinals.Services.EventService.Models;
 
-public class Tournament : CosmosItem
+public class Event : CosmosItem
 {
+    [JsonProperty("tournamentId")]
+    public string TournamentId { get; set; }
+
     [JsonProperty("name")]
     public string Name { get; set; }
 
@@ -16,8 +19,9 @@ public class Tournament : CosmosItem
     [JsonProperty("creatorId")]
     public string CreatorId { get; set; }
 
-    public Tournament(
+    public Event(
         string id,
+        string tournamentId,
         string name,
         DateTime startTime,
         DateTime endTime,
@@ -25,6 +29,7 @@ public class Tournament : CosmosItem
         DateTime? timestamp = null)
     : base(id, timestamp)
     {
+        TournamentId = tournamentId;
         Name = name;
         StartTime = startTime;
         EndTime = endTime;
