@@ -1,15 +1,1 @@
-﻿global using FluentValidation;
-global using Microsoft.AspNetCore.Http;
-global using Microsoft.AspNetCore.Mvc;
-global using Microsoft.Azure.Cosmos;
-global using Microsoft.Azure.WebJobs;
-global using Microsoft.Azure.WebJobs.Extensions.Http;
-global using Newtonsoft.Json;
-global using Semifinals.Framework;
-global using Semifinals.Framework.Services.Cosmos;
-global using Semifinals.Framework.Utils.Converters;
-global using Semifinals.Services.EventService.Models;
-global using Semifinals.Utils.Tokens;
-global using System;
-global using System.Text.RegularExpressions;
-global using System.Threading.Tasks;
+﻿
