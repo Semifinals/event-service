@@ -32,9 +32,9 @@ public class Game
     [JsonPropertyName("status")]
     [JsonConverter(typeof(GameStatusConverter))]
     public GameStatus Status { get; set; }
-
+    
     [JsonPropertyName("scores")]
-    public IDictionary<string, int> Scores { get; set; } = null!;
+    public IDictionary<string, double> Scores { get; set; } = null!;
 }
 
 public enum GameStatus

@@ -11,7 +11,7 @@ public class SetVertex
     public string PartitionKey { get; set; } = null!;
 
     [JsonPropertyName("name")]
-    public string Name { get; set; } = null!;
+    public string Name { get; set; } = null!; // An empty string is used instead of null
 
     [JsonPropertyName("status")]
     [JsonConverter(typeof(SetStatusConverter))]
@@ -27,17 +27,17 @@ public class Set
     public string PartitionKey { get; set; } = null!;
 
     [JsonPropertyName("name")]
-    public string Name { get; set; } = null!;
+    public string? Name { get; set; }
 
     [JsonPropertyName("status")]
     [JsonConverter(typeof(SetStatusConverter))]
     public SetStatus Status { get; set; }
 
     [JsonPropertyName("teams")]
-    public IList<SetTeam> Teams { get; set; } = null!;
+    public IEnumerable<SetTeam> Teams { get; set; } = null!;
 
     [JsonPropertyName("scores")]
-    public IDictionary<string, int> Scores { get; set; } = null!;
+    public IDictionary<string, double> Scores { get; set; } = null!;
 
     [JsonPropertyName("scheduledStartAt")]
     [JsonConverter(typeof(UnixEpochConverter))]
@@ -95,11 +95,8 @@ public enum SetStatus
 public class SetTeam
 {
     [JsonPropertyName("id")]
-    public string Id { get; } = null!;
+    public string Id { get; set; } = null!;
 
     [JsonPropertyName("name")]
-    public string Name { get; } = null!;
-
-    [JsonPropertyName("iconUrl")]
-    public string IconUrl { get; } = null!;
+    public string Name { get; set; } = null!;
 }
