@@ -13,6 +13,16 @@ public interface IGameRepository
     Task<IEnumerable<Game>> GetGamesBySetIdAsync(
         string setId,
         PartitionKey partitionKey);
+
+    Task<Game> CreateGameAsync(
+        string setId,
+        PartitionKey partitionKey,
+        int index);
+
+    Task<Game> UpdateGameAsync(
+        string id,
+        PartitionKey partitionKey,
+        IEnumerable<PatchOperation> operations);
 }
 
 public class GameRepository : IGameRepository
@@ -46,25 +56,41 @@ public class GameRepository : IGameRepository
             throw new GameNotFoundException(id);
         }
     }
+    
+    public class SetAndGamesResponse
+    {
+        public SetVertex? Set { get; set; } = null;
+
+        public IEnumerable<GameVertex> Games { get; set; } = Array.Empty<GameVertex>();
+    }
 
     public async Task<IEnumerable<Game>> GetGamesBySetIdAsync(
         string setId,
         PartitionKey partitionKey)
     {
-        var results = await _graphClient.SubmitAsync<GameVertex>(
-            "g.V([@setId, @partitionKey]).hasLabel('set').outE('inSet').inV()",
+        var results = await _graphClient.SubmitWithSingleResultAsync<SetAndGamesResponse>(
+            $@"
+                g.V([@setId, @partitionKey])
+                    .hasLabel('set')
+                    .as('set')
+                .outE('hasGame')
+                .inV()
+                    .fold()
+                    .as('games')
+                .select('set', 'games')",
             bindings: new Dictionary<string, object>
             {
                 { "@setId", setId },
                 { "@partitionKey", partitionKey }
             });
+        
+        if (results.Set == null)
+            throw new SetNotFoundException(setId);
 
-        // TODO: Add check to see if set exists, and throw SetNotFoundException if not
-
-        if (results.Count == 0)
+        if (results.Games.Count() == 0)
             return Array.Empty<Game>();
 
-        List<(string, PartitionKey)> keys = results
+        List<(string, PartitionKey)> keys = results.Games
             .Select(result => ((string)result.Id, partitionKey))
             .ToList();
 
@@ -74,5 +100,125 @@ public class GameRepository : IGameRepository
         return res.Resource;
     }
 
-    // TODO: Make methods to create/update games
+    public class SetAndGameResponse
+    {
+        public SetVertex? Set { get; set; } = null;
+
+        public GameVertex? Game { get; set; } = null;
+    }
+
+    public async Task<Game> CreateGameAsync(
+        string setId,
+        PartitionKey partitionKey,
+        int index)
+    {
+        // Check that the set exists
+        try
+        {
+            Container setContainer = _cosmosClient.GetContainer("events-db", "sets");
+            ItemResponse<Set> set = await setContainer.ReadItemAsync<Set>(setId, partitionKey);
+        }
+        catch (CosmosException)
+        {
+            throw new SetNotFoundException(setId);
+        }
+
+        // Create models
+        string id = ""; // TODO: Generate ID
+
+        Game game = new()
+        {
+            Id = id,
+            PartitionKey = partitionKey.ToString(),
+            Index = index,
+            Status = GameStatus.InProgress,
+            Scores = new Dictionary<string, double>()
+        };
+
+        GameVertex gameVertex = new()
+        {
+            Id = id,
+            PartitionKey = partitionKey.ToString(),
+            Index = index,
+            Status = GameStatus.InProgress
+        };
+
+        // Update databases
+        Container container = _cosmosClient.GetContainer("events-db", "games");
+        ItemResponse<Game> createdGameResponse = await container.CreateItemAsync(game, partitionKey);
+        Game createdGame = createdGameResponse.Resource;
+
+        await _graphClient.SubmitWithSingleResultAsync<SetAndGameResponse>(
+            $@"
+                g.addV('game')
+                    .property('id', @id)
+                    .property('partiionKey', @partitionKey)
+                    .property('index', @index)
+                    .property('status', @status)
+                    .as('game')
+                .V([@setId, @partitionKey])
+                    .hasLabel('set')
+                    .as('set')
+                .addE('hasGame')
+                    .property('index', @index)
+                    .from('set')
+                    .to('game')
+                    .as('hasGame')
+                .addE('fromSet')
+                    .property('index', @index)
+                    .from('game')
+                    .to('set')
+                .select('set', 'game')",
+            new Dictionary<string, object>()
+            {
+                { "@id", gameVertex.Id },
+                { "@setId", setId },
+                { "@partitionKey", gameVertex.PartitionKey },
+                { "@index", gameVertex.Index },
+                { "@status", (int)gameVertex.Status }
+            });
+        
+        
+        return createdGame;
+    }
+
+    public async Task<Game> UpdateGameAsync(
+        string id,
+        PartitionKey partitionKey,
+        IEnumerable<PatchOperation> operations)
+    {
+        // Update document
+        Container container = _cosmosClient.GetContainer("events-db", "games");
+
+        Game updatedGame;
+        try
+        {
+            ItemResponse<Game> updatedGameResponse = await container.PatchItemAsync<Game>(
+                id,
+                partitionKey,
+                operations.ToList());
+            updatedGame = updatedGameResponse.Resource;
+        }
+        catch (CosmosException)
+        {
+            throw new GameNotFoundException(id);
+        }
+
+        // Update graph
+        await _graphClient.SubmitWithSingleResultAsync<GameVertex>(
+            $@"
+                g.V([@id, @partitionKey])
+                    .hasLabel('set')
+                    .property('status', @status)
+            ",
+            new Dictionary<string, object>()
+            {
+                { "@id", id },
+                { "@partitionKey", partitionKey },
+                { "@status", (int)updatedGame.Status }
+            });
+
+        // Return with updated set
+        return updatedGame;
+    }
 }

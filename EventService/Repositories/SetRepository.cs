@@ -113,11 +113,19 @@ public class SetRepository : ISetRepository
     {
         // Update document
         Container container = _cosmosClient.GetContainer("events-db", "sets");
-        ItemResponse<Set> updatedSetResponse = await container.PatchItemAsync<Set>(
-            id,
-            partitionKey,
-            operations.ToList());
-        Set updatedSet = updatedSetResponse.Resource;
+        Set updatedSet;
+        try
+        {
+            ItemResponse<Set> updatedSetResponse = await container.PatchItemAsync<Set>(
+                id,
+                partitionKey,
+                operations.ToList());
+            updatedSet = updatedSetResponse.Resource;
+        }
+        catch (CosmosException)
+        {
+            throw new SetNotFoundException(id);
+        }
 
         // Update graph
         await _graphClient.SubmitWithSingleResultAsync<SetVertex>(

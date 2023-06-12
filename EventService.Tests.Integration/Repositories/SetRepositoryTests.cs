@@ -1,5 +1,4 @@
-﻿using Microsoft.Azure.Cosmos;
-using Semifinals.EventService.Models;
+﻿using Semifinals.EventService.Models;
 using Semifinals.EventService.Utils;
 using Semifinals.EventService.Utils.Exceptions;
 
@@ -312,7 +311,7 @@ public class SetRepositoryTests
     }
 
     [TestMethod]
-    public async Task UpdateSetByIdAsync_AddsRemovesOptionalValues()
+    public async Task UpdateSetByIdAsync_RemovesOptionalValues()
     {
         // Arrange
         string expectedPartitionKey = "";
@@ -391,5 +390,41 @@ public class SetRepositoryTests
         Assert.AreEqual(2, set.Teams.Count());
         Assert.IsNull(set.Name);
         Assert.IsNull(set.ScheduledStartAt);
+    }
+
+    [TestMethod]
+    public async Task UpdateSetByIdAsync_FailsOnNonExistentSet()
+    {
+        // Arrange
+        Mock<Container> container = new();
+        container
+            .Setup(x => x.PatchItemAsync<Set>(
+                It.IsAny<string>(),
+                It.IsAny<PartitionKey>(),
+                It.IsAny<IReadOnlyList<PatchOperation>>(),
+                null,
+                default))
+            .ThrowsAsync(new CosmosException("", HttpStatusCode.NotFound, 0, "", 0));
+
+        Mock<CosmosClient> cosmosClient = new();
+        cosmosClient
+            .Setup(x => x.GetContainer(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(container.Object);
+
+        Mock<IGraphClient> graphClient = new();
+
+        SetRepository setRepository = new(graphClient.Object, cosmosClient.Object);
+
+        IEnumerable<PatchOperation> operations = new List<PatchOperation>()
+        {
+            PatchOperation.Remove("/id"),
+            PatchOperation.Remove("/scheduledStartAt")
+        };
+
+        // Act
+        Task updateSet() => setRepository.UpdateSetByIdAsync("id", new("partitionKey"), operations);
+
+        // Assert
+        await Assert.ThrowsExceptionAsync<SetNotFoundException>(updateSet);
     }
 }
