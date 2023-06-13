@@ -13,6 +13,7 @@ public interface ISetRepository
     Task<Set> CreateSetAsync(
         PartitionKey partitionKey,
         IEnumerable<SetTeam> teams,
+        GameDefaultScorePolicy gameDefaultScorePolicy,
         string? name = null,
         DateTime? scheduledStartAt = null);
 
@@ -57,31 +58,32 @@ public class SetRepository : ISetRepository
     public async Task<Set> CreateSetAsync(
         PartitionKey partitionKey,
         IEnumerable<SetTeam> teams,
+        GameDefaultScorePolicy gameDefaultScorePolicy,
         string? name = null,
         DateTime? scheduledStartAt = null)
 
     {
         // Create models
         string id = ""; // TODO: Generate ID
-        
-        Set set = new()
-        {
-            Id = id,
-            PartitionKey = partitionKey.ToString(),
-            Name = name,
-            Status = SetStatus.NotStarted,
-            Teams = teams,
-            Scores = new Dictionary<string, double>(),
-            ScheduledStartAt = scheduledStartAt
-        };
 
-        SetVertex setVertex = new()
-        {
-            Id = id,
-            PartitionKey = partitionKey.ToString(),
-            Name = name ?? "",
-            Status = SetStatus.NotStarted
-        };
+        IDictionary<string, double> scores = new Dictionary<string, double>();
+        teams.ToList().ForEach(team => scores.Add(team.Id, 0));
+
+        Set set = new(
+            id,
+            partitionKey.ToString(),
+            SetStatus.NotStarted,
+            teams,
+            scores,
+            gameDefaultScorePolicy,
+            scheduledStartAt: scheduledStartAt,
+            name: name);
+
+        SetVertex setVertex = new(
+            id,
+            partitionKey.ToString(),
+            SetStatus.NotStarted,
+            name);
 
         // Update databases
         Container container = _cosmosClient.GetContainer("events-db", "sets");

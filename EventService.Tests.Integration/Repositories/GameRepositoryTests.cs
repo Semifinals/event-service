@@ -14,14 +14,17 @@ public class GameRepositoryTests
         // Arrange
         string expectedId = "";
         string expectedPartitionKey = "";
-        Game expectedGame = new()
-        {
-            Id = expectedId,
-            PartitionKey = expectedPartitionKey,
-            Index = 0,
-            Status = GameStatus.InProgress
-            // ... and so on
-        };
+        Game expectedGame = new(
+            expectedId,
+            expectedPartitionKey,
+            0,
+            GameStatus.InProgress,
+            new Dictionary<string, double>()
+            {
+                { "team1", 0 },
+                { "team2", 0 }
+            },
+            GameDefaultScorePolicy.Zero);
         
         Mock<ItemResponse<Game>> itemResponse = new();
         itemResponse
@@ -84,24 +87,25 @@ public class GameRepositoryTests
         string expectedId = "";
         string expectedPartitionKey = "";
 
-        SetVertex set = new()
-        {
-            Id = "",
-            PartitionKey = expectedPartitionKey,
-            Name = "A",
-            Status = SetStatus.InProgress
-        };
+        SetVertex set = new(
+            "",
+            expectedPartitionKey,
+            SetStatus.InProgress,
+            "A");
         
         IEnumerable<Game> games = new List<Game>()
         {
-            new()
-            {
-                Id = expectedId,
-                PartitionKey = expectedPartitionKey,
-                Index = 0,
-                Status = GameStatus.InProgress
-                // ... and so on
-            }
+            new(
+                expectedId,
+                expectedPartitionKey,
+                0,
+                GameStatus.InProgress,
+                new Dictionary<string, double>()
+                {
+                    { "team1", 0 },
+                    { "team2", 0 }
+                },
+                GameDefaultScorePolicy.Zero)
         };
         
         Mock<FeedResponse<Game>> feedResponse = new();
@@ -121,14 +125,11 @@ public class GameRepositoryTests
 
         IReadOnlyCollection<GameVertex> gameVertices = new List<GameVertex>()
         {
-            new()
-            {
-                Id = expectedId,
-                PartitionKey = expectedPartitionKey,
-                Index = 0,
-                Status = GameStatus.InProgress
-                // ... and so on
-            }
+            new(
+                expectedId,
+                expectedPartitionKey,
+                0,
+                GameStatus.InProgress)
         };
 
         GameRepository.SetAndGamesResponse setAndGamesResponse = new()
@@ -186,43 +187,50 @@ public class GameRepositoryTests
         string expectedPartitionKey = "partitionKey";
         int expectedIndex = 0;
         GameStatus expectedStatus = GameStatus.InProgress;
+
+        List<SetTeam> teams = new()
+        {
+            new(
+                "team1",
+                "Team 1"),
+            new(
+                "team2",
+                "Team 2")
+        };
         
-        Set set = new()
+        Dictionary<string, double> scores = new()
         {
-            Id = "",
-            PartitionKey = expectedPartitionKey,
-            // etc...
+            { "team1", 0 },
+            { "team2", 0 }
         };
 
-        Game game = new()
-        {
-            Id = expectedId,
-            PartitionKey = expectedPartitionKey,
-            Index = expectedIndex,
-            Status = expectedStatus
-        };
+        Set set = new(
+            "",
+            expectedPartitionKey,
+            SetStatus.InProgress,
+            teams,
+            scores,
+            GameDefaultScorePolicy.Zero,
+            DateTime.UtcNow);
 
-        SetVertex setVertex = new()
-        {
-            Id = "",
-            PartitionKey = expectedPartitionKey,
-            Status = SetStatus.InProgress,
-            Name = ""
-        };
+        Game game = new(
+            expectedId,
+            expectedPartitionKey,
+            expectedIndex,
+            expectedStatus,
+            scores,
+            GameDefaultScorePolicy.Zero);
 
-        GameVertex gameVertex = new()
-        {
-            Id = expectedId,
-            PartitionKey = expectedPartitionKey,
-            Index = expectedIndex,
-            Status = expectedStatus
-        };
+        SetVertex setVertex = new(
+            "",
+            expectedPartitionKey,
+            SetStatus.InProgress);
 
-        GameRepository.SetAndGameResponse setAndGameResponse = new()
-        {
-            Set = setVertex,
-            Game = gameVertex
-        };
+        GameVertex gameVertex = new(
+            expectedId,
+            expectedPartitionKey,
+            expectedIndex,
+            expectedStatus);
 
         Mock<ItemResponse<Set>> itemResponse = new();
         itemResponse
@@ -257,16 +265,21 @@ public class GameRepositoryTests
 
         Mock<IGraphClient> graphClient = new();
         graphClient
-            .Setup(x => x.SubmitWithSingleResultAsync<GameRepository.SetAndGameResponse>(
+            .Setup(x => x.SubmitWithSingleResultAsync<GameVertex>(
                 It.IsAny<string>(),
                 It.IsAny<Dictionary<string, object>>(),
                 default))
-            .ReturnsAsync(setAndGameResponse);
+            .ReturnsAsync(gameVertex);
 
         GameRepository gameRepository = new(graphClient.Object, cosmosClient.Object);
 
         // Act
-        Game createdGame = await gameRepository.CreateGameAsync("", new(expectedPartitionKey), expectedIndex);
+        Game createdGame = await gameRepository.CreateGameAsync(
+            "",
+            new(expectedPartitionKey),
+            expectedIndex,
+            GameDefaultScorePolicy.Zero,
+            teams);
 
         // Assert
         Assert.AreEqual(expectedId, createdGame.Id);
@@ -298,7 +311,20 @@ public class GameRepositoryTests
         GameRepository gameRepository = new(graphClient.Object, cosmosClient.Object);
 
         // Act
-        Task createGame() => gameRepository.CreateGameAsync("", new PartitionKey(""), 0);
+        Task createGame() => gameRepository.CreateGameAsync(
+            "",
+            new PartitionKey(""),
+            0,
+            GameDefaultScorePolicy.Zero,
+            new List<SetTeam>()
+            {
+                new(
+                    "team1",
+                    "Team 1"),
+                new(
+                    "team2",
+                    "Team 2")
+            });
 
         // Assert
         await Assert.ThrowsExceptionAsync<SetNotFoundException>(createGame);
@@ -313,21 +339,23 @@ public class GameRepositoryTests
         int expectedIndex = 0;
         GameStatus expectedStatus = GameStatus.InProgress;
 
-        Game game = new()
-        {
-            Id = expectedId,
-            PartitionKey = expectedPartitionKey,
-            Index = expectedIndex,
-            Status = expectedStatus
-        };
+        Game game = new(
+            expectedId,
+            expectedPartitionKey,
+            expectedIndex,
+            expectedStatus,
+            new Dictionary<string, double>()
+            {
+                { "team1", 0 },
+                { "team2", 0 }
+            },
+            GameDefaultScorePolicy.Zero);
 
-        GameVertex gameVertex = new()
-        {
-            Id = expectedId,
-            PartitionKey = expectedPartitionKey,
-            Index = expectedIndex,
-            Status = expectedStatus
-        };
+        GameVertex gameVertex = new(
+            expectedId,
+            expectedPartitionKey,
+            expectedIndex,
+            expectedStatus);
 
         Mock<ItemResponse<Game>> gameResponse = new();
         gameResponse

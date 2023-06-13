@@ -17,7 +17,9 @@ public interface IGameRepository
     Task<Game> CreateGameAsync(
         string setId,
         PartitionKey partitionKey,
-        int index);
+        int index,
+        GameDefaultScorePolicy defaultScorePolicy,
+        IEnumerable<SetTeam> teams);
 
     Task<Game> UpdateGameAsync(
         string id,
@@ -59,8 +61,10 @@ public class GameRepository : IGameRepository
     
     public class SetAndGamesResponse
     {
+        [JsonPropertyName("set")]
         public SetVertex? Set { get; set; } = null;
 
+        [JsonPropertyName("games")]
         public IEnumerable<GameVertex> Games { get; set; } = Array.Empty<GameVertex>();
     }
 
@@ -87,7 +91,7 @@ public class GameRepository : IGameRepository
         if (results.Set == null)
             throw new SetNotFoundException(setId);
 
-        if (results.Games.Count() == 0)
+        if (!results.Games.Any())
             return Array.Empty<Game>();
 
         List<(string, PartitionKey)> keys = results.Games
@@ -110,7 +114,9 @@ public class GameRepository : IGameRepository
     public async Task<Game> CreateGameAsync(
         string setId,
         PartitionKey partitionKey,
-        int index)
+        int index,
+        GameDefaultScorePolicy defaultScorePolicy,
+        IEnumerable<SetTeam> teams)
     {
         // Check that the set exists
         try
@@ -126,29 +132,25 @@ public class GameRepository : IGameRepository
         // Create models
         string id = ""; // TODO: Generate ID
 
-        Game game = new()
-        {
-            Id = id,
-            PartitionKey = partitionKey.ToString(),
-            Index = index,
-            Status = GameStatus.InProgress,
-            Scores = new Dictionary<string, double>()
-        };
+        Game game = new(
+            id,
+            partitionKey.ToString(),
+            index,
+            GameStatus.InProgress,
+            Game.GetDefaultScores(defaultScorePolicy, teams),
+            defaultScorePolicy);
 
-        GameVertex gameVertex = new()
-        {
-            Id = id,
-            PartitionKey = partitionKey.ToString(),
-            Index = index,
-            Status = GameStatus.InProgress
-        };
+        GameVertex gameVertex = new(
+            id,
+            partitionKey.ToString(),
+            index,
+            GameStatus.InProgress);
 
         // Update databases
         Container container = _cosmosClient.GetContainer("events-db", "games");
-        ItemResponse<Game> createdGameResponse = await container.CreateItemAsync(game, partitionKey);
-        Game createdGame = createdGameResponse.Resource;
+        Task<ItemResponse<Game>> createdGameResponse = container.CreateItemAsync(game, partitionKey);
 
-        await _graphClient.SubmitWithSingleResultAsync<SetAndGameResponse>(
+        Task<GameVertex> createdVertex = _graphClient.SubmitWithSingleResultAsync<GameVertex>(
             $@"
                 g.addV('game')
                     .property('id', @id)
@@ -156,19 +158,16 @@ public class GameRepository : IGameRepository
                     .property('index', @index)
                     .property('status', @status)
                     .as('game')
-                .V([@setId, @partitionKey])
-                    .hasLabel('set')
-                    .as('set')
-                .addE('hasGame')
-                    .property('index', @index)
-                    .from('set')
-                    .to('game')
-                    .as('hasGame')
-                .addE('fromSet')
-                    .property('index', @index)
-                    .from('game')
-                    .to('set')
-                .select('set', 'game')",
+                .sideEffect(
+                    __.V([@setId, @partitionKey])
+                        .hasLabel('set')
+                        .as('set')
+                    .addE('hasGame')
+                        .from('set')
+                        .to('game')
+                    .addE('fromSet')
+                        .from('game')
+                        .to('set'))",
             new Dictionary<string, object>()
             {
                 { "@id", gameVertex.Id },
@@ -177,9 +176,10 @@ public class GameRepository : IGameRepository
                 { "@index", gameVertex.Index },
                 { "@status", (int)gameVertex.Status }
             });
-        
-        
-        return createdGame;
+
+        await Task.WhenAll(createdGameResponse, createdVertex);
+
+        return createdGameResponse.Result.Resource;
     }
 
     public async Task<Game> UpdateGameAsync(
@@ -215,7 +215,7 @@ public class GameRepository : IGameRepository
             {
                 { "@id", id },
                 { "@partitionKey", partitionKey },
-                { "@status", (int)updatedGame.Status }
+                { "@status", (int)updatedGame.Status },
             });
 
         // Return with updated set

@@ -10,17 +10,26 @@ public class SetRepositoryTests
     [TestMethod]
     public async Task GetSetByIdAsync_GetsExistingSet()
     {
-        // Arrange
+        // Arrange        
         string expectedId = "";
         string expectedPartitionKey = "";
-        Set expectedSet = new()
+
+        IEnumerable<SetTeam> teams = new List<SetTeam>()
         {
-            Id = expectedId,
-            PartitionKey = expectedPartitionKey,
-            Name = "A",
-            Status = SetStatus.NotStarted
-            // ... and so on
+            new("team1", "Team 1"),
+            new("team2", "Team 2")
         };
+
+        IDictionary<string, double> scores = new Dictionary<string, double>();
+        teams.ToList().ForEach(team => scores.Add(team.Id, 0));
+
+        Set expectedSet = new(
+            expectedId,
+            expectedPartitionKey,
+            SetStatus.NotStarted,
+            teams,
+            scores,
+            GameDefaultScorePolicy.Zero);
 
         Mock<ItemResponse<Set>> itemResponse = new();
         itemResponse
@@ -86,36 +95,28 @@ public class SetRepositoryTests
 
         IEnumerable<SetTeam> teams = new List<SetTeam>()
         {
-            new SetTeam
-            {
-                Id = "team1",
-                Name = "Team 1"
-            },
-            new SetTeam
-            {
-                Id = "team2",
-                Name = "Team 2"
-            }
+            new("team1", "Team 1"),
+            new("team2", "Team 2")
         };
 
-        Set expectedSet = new()
-        {
-            Id = "id",
-            PartitionKey = expectedPartitionKey,
-            Name = expectedName,
-            Status = SetStatus.NotStarted,
-            Teams = teams,
-            ScheduledStartAt = expectedStartTime
-            // ... and so on
-        };
+        IDictionary<string, double> scores = new Dictionary<string, double>();
+        teams.ToList().ForEach(team => scores.Add(team.Id, 0));
 
-        SetVertex expectedSetVertex = new()
-        {
-            Id = "id",
-            PartitionKey = expectedPartitionKey,
-            Name = expectedName,
-            Status = SetStatus.NotStarted
-        };
+        Set expectedSet = new(
+            "id",
+            expectedPartitionKey,
+            SetStatus.NotStarted,
+            teams,
+            scores,
+            GameDefaultScorePolicy.Zero,
+            scheduledStartAt: expectedStartTime,
+            name: expectedName);
+
+        SetVertex expectedSetVertex = new(
+            "id",
+            expectedPartitionKey,
+            SetStatus.NotStarted,
+            expectedName);
 
         Mock<ItemResponse<Set>> itemResponse = new();
         itemResponse
@@ -143,7 +144,12 @@ public class SetRepositoryTests
         SetRepository setRepository = new(graphClient.Object, cosmosClient.Object);
 
         // Act
-        Set set = await setRepository.CreateSetAsync(new(expectedPartitionKey), teams, expectedName, expectedStartTime);
+        Set set = await setRepository.CreateSetAsync(
+            new(expectedPartitionKey),
+            teams,
+            GameDefaultScorePolicy.Zero,
+            expectedName,
+            expectedStartTime);
 
         // Assert
         Assert.AreEqual(expectedPartitionKey, set.PartitionKey);
@@ -160,33 +166,25 @@ public class SetRepositoryTests
 
         IEnumerable<SetTeam> teams = new List<SetTeam>()
         {
-            new SetTeam
-            {
-                Id = "team1",
-                Name = "Team 1"
-            },
-            new SetTeam
-            {
-                Id = "team2",
-                Name = "Team 2"
-            }
+            new("team1", "Team 1"),
+            new("team2", "Team 2")
         };
 
-        Set expectedSet = new()
-        {
-            Id = "id",
-            PartitionKey = expectedPartitionKey,
-            Status = SetStatus.NotStarted,
-            Teams = teams
-            // ... and so on
-        };
+        IDictionary<string, double> scores = new Dictionary<string, double>();
+        teams.ToList().ForEach(team => scores.Add(team.Id, 0));
 
-        SetVertex expectedSetVertex = new()
-        {
-            Id = "id",
-            PartitionKey = expectedPartitionKey,
-            Status = SetStatus.NotStarted
-        };
+        Set expectedSet = new(
+            "id",
+            expectedPartitionKey,
+            SetStatus.NotStarted,
+            teams,
+            scores,
+            GameDefaultScorePolicy.Zero);
+
+        SetVertex expectedSetVertex = new(
+            "id",
+            expectedPartitionKey,
+            SetStatus.NotStarted);
 
         Mock<ItemResponse<Set>> itemResponse = new();
         itemResponse
@@ -214,7 +212,10 @@ public class SetRepositoryTests
         SetRepository setRepository = new(graphClient.Object, cosmosClient.Object);
 
         // Act
-        Set set = await setRepository.CreateSetAsync(new(expectedPartitionKey), teams);
+        Set set = await setRepository.CreateSetAsync(
+            new(expectedPartitionKey),
+            teams,
+            GameDefaultScorePolicy.Zero);
 
         // Assert
         Assert.AreEqual(expectedPartitionKey, set.PartitionKey);
@@ -233,36 +234,28 @@ public class SetRepositoryTests
 
         IEnumerable<SetTeam> teams = new List<SetTeam>()
         {
-            new SetTeam
-            {
-                Id = "team1",
-                Name = "Team 1"
-            },
-            new SetTeam
-            {
-                Id = "team2",
-                Name = "Team 2"
-            }
+            new("team1", "Team 1"),
+            new("team2", "Team 2")
         };
 
-        Set expectedSet = new()
-        {
-            Id = "id",
-            PartitionKey = expectedPartitionKey,
-            Name = expectedName,
-            Status = SetStatus.NotStarted,
-            Teams = teams,
-            ScheduledStartAt = expectedStartTime
-            // ... and so on
-        };
+        IDictionary<string, double> scores = new Dictionary<string, double>();
+        teams.ToList().ForEach(team => scores.Add(team.Id, 0));
 
-        SetVertex expectedSetVertex = new()
-        {
-            Id = "id",
-            PartitionKey = expectedPartitionKey,
-            Name = expectedName,
-            Status = SetStatus.NotStarted
-        };
+        Set expectedSet = new(
+            "id",
+            expectedPartitionKey,
+            SetStatus.NotStarted,
+            teams,
+            scores,
+            GameDefaultScorePolicy.Zero,
+            scheduledStartAt: expectedStartTime,
+            name: expectedName);
+
+        SetVertex expectedSetVertex = new(
+            "id",
+            expectedPartitionKey,
+            SetStatus.NotStarted,
+            expectedName);
 
         Mock<ItemResponse<Set>> itemResponse = new();
         itemResponse
@@ -296,7 +289,7 @@ public class SetRepositoryTests
 
         IEnumerable<PatchOperation> operations = new List<PatchOperation>()
         {
-            PatchOperation.Add("/id", "id"),
+            PatchOperation.Add("/name", expectedName),
             PatchOperation.Add("/scheduledStartAt", ((DateTimeOffset)expectedStartTime).ToUnixTimeSeconds())
         };
 
@@ -318,33 +311,25 @@ public class SetRepositoryTests
 
         IEnumerable<SetTeam> teams = new List<SetTeam>()
         {
-            new SetTeam
-            {
-                Id = "team1",
-                Name = "Team 1"
-            },
-            new SetTeam
-            {
-                Id = "team2",
-                Name = "Team 2"
-            }
+            new("team1", "Team 1"),
+            new("team2", "Team 2")
         };
 
-        Set expectedSet = new()
-        {
-            Id = "id",
-            PartitionKey = expectedPartitionKey,
-            Status = SetStatus.NotStarted,
-            Teams = teams
-            // ... and so on
-        };
+        IDictionary<string, double> scores = new Dictionary<string, double>();
+        teams.ToList().ForEach(team => scores.Add(team.Id, 0));
 
-        SetVertex expectedSetVertex = new()
-        {
-            Id = "id",
-            PartitionKey = expectedPartitionKey,
-            Status = SetStatus.NotStarted
-        };
+        Set expectedSet = new(
+            "id",
+            expectedPartitionKey,
+            SetStatus.NotStarted,
+            teams,
+            scores,
+            GameDefaultScorePolicy.Zero);
+
+        SetVertex expectedSetVertex = new(
+            "id",
+            expectedPartitionKey,
+            SetStatus.NotStarted);
 
         Mock<ItemResponse<Set>> itemResponse = new();
         itemResponse
@@ -378,7 +363,7 @@ public class SetRepositoryTests
 
         IEnumerable<PatchOperation> operations = new List<PatchOperation>()
         {
-            PatchOperation.Remove("/id"),
+            PatchOperation.Remove("/name"),
             PatchOperation.Remove("/scheduledStartAt")
         };
 
@@ -417,7 +402,7 @@ public class SetRepositoryTests
 
         IEnumerable<PatchOperation> operations = new List<PatchOperation>()
         {
-            PatchOperation.Remove("/id"),
+            PatchOperation.Remove("/name"),
             PatchOperation.Remove("/scheduledStartAt")
         };
 
