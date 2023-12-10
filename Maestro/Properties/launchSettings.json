@@ -1,8 +1,8 @@
 {
   "profiles": {
-    "EventService": {
+    "Maestro": {
       "commandName": "Project",
-      "commandLineArgs": "--port 7099",
+      "commandLineArgs": "--port 7183",
       "launchBrowser": false
     }
   }
